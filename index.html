@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColorTrade 51 - Color Prediction Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(0,255,0,0.5), inset 0 0 20px rgba(0,255,0,0.2);
+        }
+        
+        .neon-red { box-shadow: 0 0 20px rgba(255,0,0,0.7), inset 0 0 20px rgba(255,0,0,0.3); }
+        .neon-green { box-shadow: 0 0 20px rgba(0,255,0,0.7), inset 0 0 20px rgba(0,255,0,0.3); }
+        .neon-violet { box-shadow: 0 0 20px rgba(138,43,226,0.7), inset 0 0 20px rgba(138,43,226,0.3); }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .color-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .color-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .result-display {
+            font-size: 4rem;
+            font-weight: 900;
+            text-shadow: 0 0 20px currentColor;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen text-white overflow-x-hidden">
+    <!-- Header -->
+    <header class="bg-black/50 backdrop-blur-md border-b border-green-500/30 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl neon-glow pulse"></div>
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                            ColorTrade 51
+                        </h1>
+                        <p class="text-xs text-green-400">Next Prediction: <span id="timer" class="font-bold">60</span>s</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <div class="text-right">
+                        <div class="text-sm text-gray-400">Balance</div>
+                        <div class="text-2xl font-bold text-green-400" id="balance">$1,000.00</div>
+                    </div>
+                    <button class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-6 py-2 rounded-xl font-bold neon-glow transition-all duration-300">
+                        <i class="fas fa-plus mr-2"></i>Add Funds
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Game Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Panel - Prediction & Results -->
+            <div class="space-y-6">
+                <!-- Current Prediction -->
+                <div class="bg-black/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-8">
+                    <h2 class="text-xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-palette mr-3 text-2xl text-purple-400"></i>
+                        Place Your Bet
+                    </h2>
+                    
+                    <!-- Bet Amount Selector -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-bold mb-3 text-gray-300">Bet Amount</label>
+                        <div class="grid grid-cols-4 gap-2 mb-4">
+                            <button class="bet-btn bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-xl font-bold transition-all" data-amount="10">$10</button>
+                            <button class="bet-btn bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-xl font-bold transition-all" data-amount="50">$50</button>
+                            <button class="bet-btn bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-xl font-bold transition-all" data-amount="100">$100</button>
+                            <button class="bet-btn bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-xl font-bold transition-all" data-amount="500">$500</button>
+                        </div>
+                        <input type="number" id="customBet" class="w-full bg-gray-800 border border-gray-600 rounded-xl px-4 py-3 text-lg font-bold text-right focus:outline-none focus:ring-4 focus:ring-green-500/50" placeholder="$0.00" min="10" max="10000">
+                    </div>
+
+                    <!-- Color Selection -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="color-card bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-2xl text-center neon-red" data-color="red">
+                            <div class="text-4xl mb-2">🔴</div>
+                            <div class="font-bold text-lg">RED</div>
+                            <div class="text-sm text-red-100">x2.00</div>
+                        </div>
+                        <div class="color-card bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-2xl text-center neon-green" data-color="green">
+                            <div class="text-4xl mb-2">🟢</div>
+                            <div class="font-bold text-lg">GREEN</div>
+                            <div class="text-sm text-green-100">x2.00</div>
+                        </div>
+                        <div class="color-card bg-gradient-to-br from-purple-500 to-violet-600 text-white p-6 rounded-2xl text-center neon-violet" data-color="violet">
+                            <div class="text-4xl mb-2">🟣</div>
+                            <div class="font-bold text-lg">VIOLET</div>
+                            <div class="text-sm text-purple-100">x2.00</div>
+                        </div>
+                    </div>
+
+                    <div id="selectedColor" class="mt-6 p-4 bg-gray-800/50 rounded-xl text-center font-bold hidden">
+                        Selected: <span id="colorName"></span> | Amount: $<span id="betAmount">0</span>
+                    </div>
+                </div>
+
+                <!-- Recent Results -->
+                <div class="bg-black/50 backdrop-blur-md border border-gray-700/50 rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <i class="fas fa-history mr-3 text-2xl text-yellow-400"></i>
+                        Recent Results
+                    </h3>
+                    <div id="resultsList" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- Results will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Live Game & Stats -->
+            <div class="space-y-6">
+                <!-- Live Prediction Display -->
+                <div class="bg-gradient-to-br from-black to-gray-900 border-4 border-green-500/30 rounded-3xl p-8 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+                    <div class="relative z-10">
+                        <div class="text-6xl mb-4" id="liveColor">🎲</div>
+                        <div class="result-display mb-4" id="resultText">Waiting for next round...</div>
+                        <div class="text-2xl font-bold text-green-400" id="multiplier">x2.00</div>
+                        <div class="mt-4 text-sm text-gray-400">
+                            Round #<span id="roundNumber">1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-black/50 backdrop-blur-md border border-gray-700/50 rounded-xl p-6 text-center">
+                        <div class="text-3xl font-bold text-green-400" id="totalRounds">0</div>
+                        <div class="text-sm text-gray-400 uppercase tracking-wider">Total Rounds</div>
+                    </div>
+                    <div class="bg-black/50 backdrop-blur-md border border-gray-700/50 rounded-xl p-6 text-center">
+                        <div class="text-3xl font-bold text-purple-400" id="winRate">0%</div>
+                        <div class="text-sm text-gray-400 uppercase tracking-wider">Win Rate</div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="bg-black/50 backdrop-blur-md border border-gray-700/50 rounded-xl p-6">
+                    <h4 class="font-bold mb-4 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-green-400"></i>Hot Colors
+                    </h4>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-red-500/20 p-2 rounded-lg font-bold text-red-400">Red <span class="text-sm">(12)</span></div>
+                        <div class="bg-green-500/20 p-2 rounded-lg font-bold text-green-400">Green <span class="text-sm">(8)</span></div>
+                        <div class="bg-purple-500/20 p-2 rounded-lg font-bold text-purple-400">Violet <span class="text-sm">(10)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Bar -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md border-t border-gray-700/50 p-4 z-40">
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+            <div class="color-card bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-xl text-center neon-red text-sm" data-color="red">
+                <div class="text-2xl mb-1">🔴</div>RED
+            </div>
+            <div class="color-card bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-xl text-center neon-green text-sm" data-color="green">
+                <div class="text-2xl mb-1">🟢</div>GREEN
+            </div>
+            <div class="color-card bg-gradient-to-br from-purple-500 to-violet-600 text-white p-4 rounded-xl text-center neon-violet text-sm" data-color="violet">
+                <div class="text-2xl mb-1">🟣</div>VIOLET
+            </div>
+        </div>
+        <div class="text-center mt-3 text-sm text-gray-400">
+            Bet Amount: $<span id="mobileBet">$100</span>
+        </div>
+    </div>
+
+    <script>
+        class ColorTradeGame {
+            constructor() {
+                this.balance = 1000;
+                this.betAmount = 100;
+                this.selectedColor = null;
+                this.gameTimer = 60;
+                this.roundNumber = 1;
+                this.results = [];
+                this.totalRounds = 0;
+                this.wins = 0;
+                
+                this.colors = ['red', 'green', 'violet'];
+                this.colorEmojis = {
+                    red: '🔴',
+                    green: '🟢',
+                    violet: '🟣'
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.bindEvents();
+                this.startTimer();
+                this.updateDisplay();
+                this.simulateResults();
+            }
+            
+            bindEvents() {
+                // Bet amount buttons
+                document.querySelectorAll('.bet-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.betAmount = parseInt(e.target.dataset.amount);
+                        this.updateBetDisplay();
+                        this.clearSelection();
+                    });
+                });
+                
+                // Custom bet input
+                document.getElementById('customBet').addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    if (value >= 10 && value <= 10000 && value <= this.balance) {
+                        this.betAmount = value;
+                        this.updateBetDisplay();
+                    }
+                });
+                
+                // Color selection
+                document.querySelectorAll('.color-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if (this.gameTimer < 55) return; // Only allow betting in first 5 seconds
+                        this.selectedColor = e.currentTarget.dataset.color;
+                        this.selectColor();
+                    });
+                });
+                
+                // Mobile color cards
+                const mobileCards = document.querySelectorAll('.lg\\:hidden .color-card');
+                mobileCards.forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if (this.gameTimer < 55) return;
+                        this.selectedColor = e.currentTarget.dataset.color;
+                        this.selectColor();
+                    });
+                });
+            }
+            
+            startTimer() {
+                const timerInterval = setInterval(() => {
+                    this.gameTimer--;
+                    document.getElementById('timer').textContent = this.gameTimer;
+                    
+                    if (this.gameTimer <= 0) {
+                        clearInterval(timerInterval);
+                        this.endRound();
+                    }
+                }, 1000);
+            }
+            
+            selectColor() {
+                document.querySelectorAll('.color-card').forEach(card => {
+                    card.classList.remove('ring-4', 'ring-green-400', 'ring-offset-2', 'ring-offset-black');
+                });
+                
+                document.querySelectorAll(`[data-color="${this.selectedColor}"]`).forEach(card => {
+                    card.classList.add('ring-4', 'ring-green-400', 'ring-offset-2', 'ring-offset-black');
+                });
+                
+                document.getElementById('selectedColor').classList.remove('hidden');
+                document.getElementById('colorName').textContent = this.selectedColor.toUpperCase();
+                document.getElementById('betAmount').textContent = this.betAmount.toLocaleString();
+                document.getElementById('mobileBet').textContent = this.betAmount.toLocaleString();
+            }
+            
+            clearSelection() {
+                document.getElementById('selectedColor').classList.add('hidden');
+                document.querySelectorAll('.color-card').forEach(card => {
+                    card.classList.remove('ring-4', 'ring-green-400', 'ring-offset-2', 'ring-offset-black');
+                });
+                this.selectedColor = null;
+            }
+            
+            updateBetDisplay() {
+                document.getElementById('customBet').value = this.betAmount;
+                document.getElementById('mobileBet').textContent = this.betAmount.toLocaleString();
+            }
+            
+            endRound() {
+                const resultColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+                this.processRound(resultColor);
+                
+                // Reset for next round
+                this.gameTimer = 60;
+                this.roundNumber++;
+                this.totalRounds++;
+                
+                setTimeout(() => {
+                    this.startTimer();
+                    this.clearSelection();
+                    this.updateDisplay();
+                }, 3000);
+            }
+            
+            processRound(resultColor) {
+                const resultEmoji = this.colorEmojis[resultColor];
+                document.getElementById('liveColor').textContent = resultEmoji;
+                document.getElementById('resultText').textContent = resultColor.toUpperCase();
+                document.getElementById('roundNumber').textContent = this.roundNumber;
+                
+                let won = false;
+                if (this.selectedColor === resultColor && this.selectedColor) {
+                    const winnings = this.betAmount * 2;
+                    this.balance += winnings - this.betAmount;
+                    this.wins++;
+                    document.getElementById('resultText').style.color = '#00FF00';
+                    document.getElementById('multiplier').textContent = 'WIN! +$' + (winnings - this.betAmount).toLocaleString();
+                    won = true;
+                } else {
+                    this.balance -= this.betAmount;
+                    document.getElementById('resultText').style.color = '#FF4444';
+                    document.getElementById('multiplier').textContent = 'LOST -$'+this.betAmount.toLocaleString();
+                }
+                
+                // Add to results
+                this.results.unshift({
+                    color: resultColor,
+                    won: won,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+                
+                if (this.results.length > 20) {
+                    this.results.pop();
+                }
+                
+                this.updateResultsList();
+                this.updateDisplay();
+            }
+            
+            updateDisplay() {
+                document.getElementById('balance').textContent = '$' + this.balance.toLocaleString('.00');
+                document.getElementById('totalRounds').textContent = this.totalRounds;
+                const winRate = this.totalRounds > 0 ? Math.round((this.wins / this.totalRounds) * 100) : 0;
+                document.getElementById('winRate').textContent = winRate + '%';
+            }
+            
+            updateResultsList() {
+                const resultsList = document.getElementById('resultsList');
+                resultsList.innerHTML = this.results.map
